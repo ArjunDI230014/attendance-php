@@ -1,0 +1,68 @@
+nav a{display:flex;gap:12px;align-items:center;width:100%;padding:13px 14px;border-radius:7px;color:#afc3bf;text-align:left;margin:5px 0;font-size:13px;text-decoration:none}
+nav a span{width:18px;font-size:21px;line-height:1}
+nav a.active{background:#2c474c;color:#fff}
+nav a:hover{background:#2c474c}
+.inline-form{display:inline;margin:0}
+.native-files table{min-width:850px;white-space:normal}
+.native-files .library-row-actions{min-width:300px}
+.native-search{flex:1;min-width:200px;max-width:400px}
+.library-toolbar>label{font-size:11px;color:var(--muted)}
+.library-toolbar{align-items:end}
+.library-toolbar label input,.library-toolbar label select{margin-top:6px}
+.empty-upload{margin-top:20px}
+.upload-page{max-width:850px;padding:32px}
+.upload-page>.library-upload-icon{margin-bottom:20px}
+.upload-page>p,.edit-page>p{font-size:13px;line-height:1.8;margin:10px 0 24px}
+.native-upload-form{border:1px solid var(--line);border-radius:8px;padding:24px;background:#f7faf5}
+.native-upload-form>label{font-size:13px;font-weight:600;display:block;margin-bottom:10px}
+.native-upload-form>select{margin-bottom:20px;width:100%;font-size:13px}
+#upload-status:not(:empty){margin-top:16px}
+.native-upload-form input[type=file]{display:block;width:100%;padding:12px;background:white;cursor:pointer;border:1px solid #b8c9bc;font-size:13px}
+.native-upload-form input[type=file]::file-selector-button{font:inherit;padding:9px 14px;margin-right:12px;border:1px solid #bac9bd;background:#edf3e9;border-radius:5px;color:#244c3d;cursor:pointer}
+#upload-help{font-size:12px;line-height:1.8;margin-top:12px}
+.native-form-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:24px}
+.edit-page{max-width:650px;padding:30px}
+.edit-page label{font-size:12px;color:var(--muted)}
+.selected-workbook-actions{display:flex;gap:12px;align-items:center;font-size:11px;margin:0 0 18px}
+@media(max-width:900px){nav{flex-wrap:wrap}nav a{width:auto;margin:0;padding:9px 10px;font-size:11px;gap:5px}nav a span{display:none}}
+@media(max-width:620px){nav{justify-content:flex-start}nav a{font-size:10px;padding:7px}.upload-page,.edit-page{padding:20px}.native-upload-form{padding:16px}.library-toolbar>label{width:100%;max-width:none}.selected-workbook-actions{flex-wrap:wrap}}
+.workspace-current{margin:8px 14px 22px;color:#fff;font-size:20px;font-weight:650}
+.workspace-current>a{display:block;margin-top:8px;color:#b7cbc5;font-size:11px;font-weight:400;text-decoration:none}
+.workspace-home{min-height:100vh;display:flex;flex-direction:column;background:#f4f5ef}
+.workspace-home-header{display:flex;justify-content:space-between;align-items:center;padding:26px 5%;background:#1b343b}
+.workspace-home-header .brand{margin:0;padding:0;color:white;text-decoration:none}
+.workspace-home-header .local-tag{color:#cfdfd2;background:#2c474c}
+.workspace-home-main{width:min(100%,1040px);margin:auto;padding:64px 36px}
+.workspace-home-main h1{font-size:clamp(32px,5vw,48px);letter-spacing:-1.5px;margin:14px 0}
+.workspace-intro{font-size:16px;color:var(--muted);line-height:1.7}
+.workspace-cards{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:36px}
+.workspace-card{display:flex;flex-direction:column;align-items:flex-start;padding:32px;border:1px solid #d6ddd2;border-radius:14px;background:#fff;color:#1b343b;text-decoration:none;box-shadow:0 7px 24px #1b343b06;transition:transform .15s,border-color .15s}
+.workspace-card:hover{transform:translateY(-4px);border-color:#54785e}
+.workspace-card:focus-visible{outline:3px solid #ad7b28;outline-offset:5px}
+.workspace-symbol{display:grid;place-items:center;width:56px;height:56px;border-radius:12px;background:#e6eee2;color:#325645;font-size:30px;margin-bottom:28px}
+.workspace-food .workspace-symbol{background:#fff0df;color:#b06522}
+.workspace-card h2{font-size:30px;margin:9px 0 12px}
+.workspace-card p{font-size:14px;line-height:1.9;color:var(--muted);margin:0 0 30px}
+.workspace-enter{width:100%;padding-top:20px;border-top:1px solid var(--line);font-size:13px;font-weight:650;display:flex;justify-content:space-between}
+.workspace-enter>span{font-size:20px}
+.workspace-separation{max-width:650px;font-size:12px;line-height:1.8;color:var(--muted);margin:24px 0 0}
+.workspace-home-footer{padding:22px 5%;margin:0}
+@media(max-width:900px){.workspace-current{margin:0 12px;font-size:15px}.workspace-current>a{margin-top:4px}.workspace-home-main{padding:40px 24px}.workspace-home-header .brand{display:flex}.workspace-home-header .local-tag{display:none}}
+@media(max-width:620px){.workspace-cards{grid-template-columns:1fr;gap:18px}.workspace-card{padding:24px}.workspace-symbol{margin-bottom:20px}.workspace-home-footer{gap:14px;flex-wrap:wrap}}
+
+/* Keep the SummitNext wordmark within the sidebar at every breakpoint. */
+.sidebar .brand{font-size:20px;gap:9px;margin-left:0;margin-right:0;letter-spacing:0}
+.brand-icon{flex-shrink:0}
+.sidebar .brand small{font-size:6px;letter-spacing:1px}
+.workbook-dialog-filename{margin-top:14px;font-weight:600;color:var(--ink);overflow-wrap:anywhere}
+#workbook-dialog-error:not(:empty){margin-top:18px;margin-bottom:0}
+#library-dialog .dialog-head h2{font-size:22px}
+.workbook-upload-panel{scroll-margin-top:24px}
+.inline-workbook-upload{display:grid;grid-template-columns:minmax(220px,1fr) minmax(170px,230px) auto;align-items:end;gap:16px;padding:20px}
+.inline-workbook-upload label{display:block;font-size:12px;font-weight:600;margin-bottom:8px}
+.inline-workbook-upload select{width:100%;margin:0;min-height:46px;font-size:12px}
+.inline-workbook-upload>button{min-height:46px;margin-bottom:1px}
+.inline-workbook-upload #upload-help,.inline-workbook-upload #upload-status,.inline-workbook-upload noscript{grid-column:1/-1;margin:0}
+.inline-workbook-upload #upload-status:empty{display:none}
+@media(max-width:1180px){.inline-workbook-upload{grid-template-columns:minmax(180px,1fr) minmax(160px,220px)}.inline-workbook-upload>button{grid-column:1/-1;justify-self:start}}
+@media(max-width:620px){.inline-workbook-upload{grid-template-columns:minmax(0,1fr);padding:16px}.inline-workbook-upload>button{width:100%}}

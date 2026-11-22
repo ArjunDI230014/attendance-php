@@ -1,3 +1,7 @@
-/storage/*
-!/storage/.htaccess
-/tests/*.xlsx
+/backups/
+/archive/
+/releases/
+/app/storage/*
+!/app/storage/.htaccess
+node_modules/
+*.log

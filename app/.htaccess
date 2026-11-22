@@ -1,0 +1,44 @@
+# Serve this attendance dashboard only to requests from this computer.
+Require local
+Options -Indexes
+DirectoryIndex index.php index.html
+AddType text/javascript .mjs
+Header always set Cache-Control "no-store"
+Header always set X-Content-Type-Options "nosniff"
+
+# Keep already-open tabs working after assets move into their organized folders.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /attendance_php/
+    RewriteRule ^(?:assets/js/)?(app|model|agent-details|dashboard-entry)\.mjs$ assets/js/dashboard/$1.mjs [R=302,L]
+    RewriteRule ^(?:assets/js/)?(file-dialogs|upload-form|file-page-entry)\.mjs$ assets/js/files/$1.mjs [R=302,L]
+    RewriteRule ^(?:assets/js/)?(navigation|page-loading)\.mjs$ assets/js/navigation/$1.mjs [R=302,L]
+    RewriteRule ^(?:assets/js/)?(theme\.mjs|theme-init\.js)$ assets/js/theme/$1 [R=302,L]
+    RewriteRule ^(?:assets/css/)?(styles|pages)\.css$ assets/css/shared/$1.css [R=302,L]
+    RewriteRule ^(?:assets/css/)?agent-details\.css$ assets/css/dashboard/agent-details.css [R=302,L]
+    RewriteRule ^(?:assets/css/)?file-library\.css$ assets/css/files/file-library.css [R=302,L]
+    RewriteRule ^(?:assets/css/)?page-loading\.css$ assets/css/navigation/page-loading.css [R=302,L]
+    RewriteRule ^(?:assets/css/)?theme\.css$ assets/css/theme/theme.css [R=302,L]
+    RewriteRule ^(jszip\.min\.js|JSZip-LICENSE\.txt)$ assets/vendor/$1 [R=302,L]
+</IfModule>
+
+# XAMPP / Apache mod_php upload settings. FastCGI uses dist/.user.ini.
+<IfModule php_module>
+    php_value upload_max_filesize 30M
+    php_value post_max_size 32M
+    php_value memory_limit 256M
+    php_value max_execution_time 120
+</IfModule>
+
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+<Files "dashboard.html">
+    Require all denied
+</Files>
+
+# Legacy bundled workbook data is no longer part of the application.
+<Files "data.js">
+    Require all denied
+</Files>

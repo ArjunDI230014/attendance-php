@@ -1,0 +1,30 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import {createRequire} from 'node:module';
+import {projectRoot} from '../tests/helpers/paths.mjs';
+const JSZip=createRequire(import.meta.url)('../app/assets/vendor/jszip.min.js');
+const metadata=JSON.parse(fs.readFileSync(path.join(projectRoot,'package.json'),'utf8'));
+const walk=directory=>fs.readdirSync(directory,{withFileTypes:true}).sort((a,b)=>a.name.localeCompare(b.name)).flatMap(entry=>entry.isDirectory()?walk(path.join(directory,entry.name)):[path.join(directory,entry.name)]);
+const rootFiles=['README.md','package.json','.gitignore','.ignore','Open Dashboard.url'];
+const files=[...rootFiles.map(name=>path.join(projectRoot,name)),...['app','docs','scripts','tests'].flatMap(name=>walk(path.join(projectRoot,name)))];
+const zip=new JSZip();const manifest=[];const prefix='SummitNext-Attendance/';
+for(const file of files){
+    const relative=path.relative(projectRoot,file).split(path.sep).join('/');
+    if(relative.startsWith('app/storage/')&&relative!=='app/storage/.htaccess')continue;
+    if(relative.startsWith('scripts/maintenance/'))continue;
+    const bytes=fs.readFileSync(file);
+    zip.file(prefix+relative,bytes);
+    manifest.push({path:relative,bytes:bytes.length,sha256:crypto.createHash('sha256').update(bytes).digest('hex')});
+}
+zip.file(prefix+'HANDOVER-MANIFEST.json',JSON.stringify({version:metadata.version,createdAt:new Date().toISOString(),excluded:['staff workbooks and runtime indexes','backups','archived versions','previous releases'],files:manifest},null,2));
+const directory=path.join(projectRoot,'releases');fs.mkdirSync(directory,{recursive:true});
+const name=`SummitNext-Attendance-${metadata.version}.zip`;
+const bytes=await zip.generateAsync({type:'nodebuffer',compression:'DEFLATE'});
+fs.writeFileSync(path.join(directory,name),bytes);
+const hash=crypto.createHash('sha256').update(bytes).digest('hex');
+fs.writeFileSync(path.join(directory,name+'.sha256'),`${hash}  ${name}\n`);
+const verified=await JSZip.loadAsync(bytes);
+const forbidden=Object.keys(verified.files).filter(name=>/\.(xlsx|xls|csv)$/i.test(name)||/\/(archive|backups|releases)\//.test(name)||(/\/app\/storage\//.test(name)&&!name.endsWith('/.htaccess')&&!name.endsWith('/')));
+if(forbidden.length)throw Error('The handover package unexpectedly includes private/runtime files: '+forbidden.join(', '));
+console.log(`Created releases/${name}: ${manifest.length} source/documentation files; no staff data, backups or legacy versions.`);

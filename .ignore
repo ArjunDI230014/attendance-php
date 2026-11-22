@@ -1,0 +1,5 @@
+archive/
+backups/
+releases/
+app/storage/
+app/assets/vendor/jszip.min.js

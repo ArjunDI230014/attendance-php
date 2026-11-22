@@ -1,0 +1,16 @@
+{
+  "name": "summitnext-attendance",
+  "version": "1.0.2",
+  "private": true,
+  "description": "Local SummitNext attendance app with separate Food and Marketplace workspaces.",
+  "scripts": {
+    "test": "node scripts/check.mjs",
+    "test:integration": "node scripts/check.mjs --integration",
+    "test:all": "node scripts/check.mjs --all",
+    "package": "node scripts/build-release.mjs",
+    "preview": "node scripts/preview-navigation.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
