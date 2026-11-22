@@ -17,3 +17,8 @@ Header always set X-Content-Type-Options "nosniff"
 <FilesMatch "^\.">
     Require all denied
 </FilesMatch>
+
+# Legacy bundled workbook data is no longer part of the application.
+<Files "data.js">
+    Require all denied
+</Files>

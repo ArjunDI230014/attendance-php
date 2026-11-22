@@ -1,20 +1,30 @@
 import {agg,group,staff,filter,normalize} from './model.mjs';
-import {readWorkbook} from './xlsx-reader.mjs';
 import {openAgentDetails,agentLeaveExport} from './agent-details.mjs';
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>n==null?'n.a.':Number(n).toLocaleString('en-MY',{maximumFractionDigits:1}),pct=n=>n==null?'n.a.':n.toFixed(1)+'%',monthLabel=s=>new Date(s+'-01T00:00:00Z').toLocaleDateString('en-GB',{month:'short',year:'2-digit',timeZone:'UTC'});
 const dayNames=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const storage={get(k,f){try{return JSON.parse(localStorage.getItem(k))??f;}catch{return f;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true;}catch{return false;}}};
-let data=window.INITIAL_DATA,settings=storage.get('sfsn-settings-v1',{threshold:8,target:15}),actions=storage.get('sfsn-actions-v1',[]),page='overview',sort={k:'u',dir:-1},filtered=[],people=[];
+const emptyWorkbook=()=>({source:'No workbook selected',sheet:'',rows:[],issues:[],sourceCount:0,first:null,last:null});
+let data=emptyWorkbook(),settings=storage.get('sfsn-settings-v1',{threshold:8,target:15}),actions=storage.get('sfsn-actions-v1',[]),page='overview',sort={k:'u',dir:-1},filtered=[],people=[];
+const emptyState=document.createElement('section');emptyState.id='dashboard-empty';emptyState.className='panel dashboard-empty';emptyState.innerHTML='<div class="eyebrow">GET STARTED</div><h2>No workbook loaded yet</h2><p>Upload an attendance workbook in Excel files, then choose “Use in dashboard” to see your attendance data.</p><a class="button primary" href="files.php">Open Excel files</a><small>Your selected workbook stays available across the dashboard pages.</small>';$('overview').prepend(emptyState);
 if(!Number.isFinite(settings.threshold)||!Number.isFinite(settings.target)||settings.threshold<=0||settings.threshold>100||settings.target<=0||settings.target>100)settings={threshold:8,target:15};
 if(!Array.isArray(actions))actions=[];
 function message(s){$('message').textContent=s;}
 function basis(){return $('basis').value;}
 function filters(){return {start:$('start').value,end:$('end').value,team:$('team').value,lead:$('lead').value,status:$('status').value};}
 function persist(){if(!storage.set('sfsn-actions-v1',actions))message('This browser could not save actions. Export a backup before closing.');}
-function showPage(p){if(!['overview','people'].includes(p))p='people';page=p;document.querySelectorAll('.page').forEach(e=>e.hidden=e.id!==p);document.querySelectorAll('nav button').forEach(e=>e.classList.toggle('active',e.dataset.page===p));const titles={overview:['Attendance overview','A clear view of your people, patterns and next steps.'],people:['Staff attendance','Find the people who need a conversation, support or follow-up.']};$('page-title').textContent=titles[p][0];$('page-subtitle').textContent=titles[p][1];location.hash=p;}
+function showPage(p){
+ if(!['overview','people','files'].includes(p))p='overview';
+ const routes={overview:'index.php',people:'people.php',files:'files.php'};
+ if(p==='files'||(window.SFSN_PAGE&&p!==window.SFSN_PAGE)){location.assign(routes[p]);return;}
+ page=p;document.body.dataset.page=p;document.querySelectorAll('.page').forEach(e=>e.hidden=e.id!==p);
+ document.querySelectorAll('nav button').forEach(e=>e.classList.toggle('active',e.dataset.page===p));
+ const titles={overview:['Attendance overview','A clear view of your people, patterns and next steps.'],people:['Staff attendance','Find the people who need a conversation, support or follow-up.']};
+ $('page-title').textContent=titles[p][0];$('page-subtitle').textContent=titles[p][1];if(!window.SFSN_PAGE)location.hash=p;message('');
+}
 function populate(){for(const [id,values] of [['month',[...new Set(data.rows.map(r=>r.d.slice(0,7)))].sort()],['team',[...new Set(data.rows.map(r=>r.team))].sort()],['lead',[...new Set(data.rows.map(r=>r.lead))].sort()],['status',[...new Set(data.rows.map(r=>r.status))].sort()]]){const e=$(id);e.options.length=1;for(const v of values)e.add(new Option(id==='month'?monthLabel(v):v,v));}
- $('start').value=data.first||'';$('end').value=data.last||'';$('source-label').textContent=data.source+' / '+data.sheet;
+ document.body.dataset.workbook=data.rows.length?'loaded':'empty';emptyState.hidden=!!data.rows.length;$('export').disabled=!data.rows.length;
+ $('start').value=data.first||'';$('end').value=data.last||'';$('source-label').textContent=data.sheet?data.source+' / '+data.sheet:data.source;
  const latest=data.last,partial=latest&&+latest.slice(-2)<new Date(Date.UTC(+latest.slice(0,4),+latest.slice(5,7),0)).getUTCDate();$('coverage').textContent=latest?'Recorded through '+latest+(partial?' · Latest month is partial':''):'No usable records';
 }
 function kpi(label,value,meta,cls=''){return `<article class="kpi"><div class="kpi-label">${label}<span>↗</span></div><div class="kpi-value ${cls}">${value}</div><div class="kpi-meta">${meta}</div></article>`;}
@@ -56,16 +66,11 @@ for(const id of ['team','lead','status','start','end','basis'])$(id).addEventLis
  $('export').onclick=()=>{const list=renderPeople(),header=['Staff ID','Name','Team (latest selected row)','Reporting lead (latest selected row)','Status (latest selected row)','Worked days','Off days','Planned days','Unplanned days','Rate base','Unplanned %','Attendance %','Late logs','Review prompt','Period from','Period to','Rate basis'];const records=list.map(a=>[a.id,a.name,a.team,a.lead,a.status,a.aw,a.o,a.p,a.u,a.base,a.up?.toFixed(4),a.att?.toFixed(4),a.late,a.review,$('start').value,$('end').value,basis()]);download('SFSN-staff-attendance.csv','\ufeff'+[header,...records].map(r=>r.map(csvCell).join(',')).join('\r\n'),'text/csv;charset=utf-8');};
  $('backup').onclick=()=>download('SFSN-attendance-actions.json',JSON.stringify({version:1,actions},null,2),'application/json');
  $('restore').onchange=async e=>{try{const f=e.target.files[0];if(!f)return;if(f.size>5e6)throw Error('Action backup must be smaller than 5 MB.');const x=JSON.parse(await f.text());if(x.version!==1||!Array.isArray(x.actions)||x.actions.some(a=>!a||typeof a.id!=='string'||typeof a.title!=='string'||typeof a.description!=='string'||!['Open','In progress','Completed'].includes(a.status)||!/^\d{4}-\d{2}-\d{2}$/.test(a.due)||typeof a.owner!=='string'))throw Error('This file is not a valid action backup.');let added=0;for(const a of x.actions)if(!actions.some(v=>v.id===a.id)){actions.push({id:a.id,key:String(a.key||a.id),title:a.title,description:a.description,owner:a.owner,due:a.due,status:a.status,note:String(a.note||''),scope:String(a.scope||''),created:String(a.created||'')});added++;}persist();renderActions();message(added+' actions imported. Existing action IDs were kept.');}catch(err){message(err.message);}finally{e.target.value='';}};
-async function importWorkbook(file){
- if(!/\.xlsx$/i.test(file.name))throw Error('Upload an .xlsx Excel workbook. Save older .xls files as .xlsx first.');
- if(file.size>30*1024*1024)throw Error('The file is over 30 MB. Use a smaller master workbook.');
- if(!window.SFSN_UPLOAD_URL)return readWorkbook(file);
- const form=new FormData();form.append('workbook',file);
- const response=await fetch(window.SFSN_UPLOAD_URL,{method:'POST',body:form,credentials:'same-origin'});
- let result;try{result=await response.json();}catch{throw Error('The server did not return a workbook. Check PHP is enabled and its upload limit allows this file.');}
- if(!response.ok||result.error)throw Error(result.error||'The workbook upload failed. Please try again.');
- if(!result.workbook||!Array.isArray(result.workbook.headers)||!Array.isArray(result.workbook.rows))throw Error('The server returned an invalid workbook response.');
- return result.workbook;
-}
- $('upload').onchange=async e=>{const file=e.target.files[0];if(!file)return;e.target.disabled=true;message(window.SFSN_UPLOAD_URL?'Uploading and checking workbook…':'Reading and checking workbook…');try{const raw=await importWorkbook(file),next=normalize(raw);if(!next.rows.length)throw Error('No usable attendance records. Check that actuals and cached numeric count values are present.');next.sourceCount=next.all.length;delete next.all;data=next;populate();$('month').value='';$('team').value='';$('lead').value='';$('status').value='';$('search').value='';$('review-filter').value='';$('detail').close();render();message(`Imported ${fmt(data.rows.length)} measured records. ${fmt(data.issues.length)} rows excluded. Data is available until this page reloads; actions remain saved locally.`);}catch(err){message('Import failed: '+err.message);}finally{e.target.value='';e.target.disabled=false;}};
-populate();render();showPage(['overview','people'].includes(location.hash.slice(1))?location.hash.slice(1):'overview');
+function applyWorkbook(raw){const next=normalize(raw);if(!next.rows.length)throw Error('No usable attendance records. Check that actuals and cached numeric count values are present.');next.sourceCount=next.all.length;delete next.all;data=next;resetWorkbookView();}
+function resetWorkbookView(){populate();for(const id of ['month','team','lead','status','search','review-filter'])$(id).value='';$('detail').close();render();}
+let startupError=window.SFSN_LOAD_ERROR||'';
+if(window.SFSN_WORKBOOK){try{applyWorkbook(window.SFSN_WORKBOOK);}catch(error){startupError='This workbook could not be displayed: '+error.message;}}
+populate();render();
+if(location.hash==='#files'){location.replace('files.php');}else{showPage(window.SFSN_PAGE||(['overview','people'].includes(location.hash.slice(1))?location.hash.slice(1):'overview'));}
+if(startupError)message(startupError);
+window.addEventListener('hashchange',()=>{const next=location.hash.slice(1);if(next&&next!==page)showPage(next);});
